@@ -1,0 +1,61 @@
+name: evals
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # Runs on every PR. No credentials, no network, ~1s: typecheck, unit tests,
+  # and the two-direction harness self-test. If a grader stops firing, this is
+  # what catches it.
+  harness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  # The live suite costs money and needs a key, so it is gated on the secret
+  # being present rather than failing every fork's PR. Exit code 1 (critical
+  # failure or regression against the baseline) fails the job; exit 2
+  # (non-critical only) is reported but does not block.
+  agent:
+    runs-on: ubuntu-latest
+    needs: harness
+    if: github.event_name == 'push'
+    # Job-level env, because a step's own `env:` is not in scope for its `if:`.
+    # Setting it only on the step made the guard always false and silently
+    # skipped the suite -- caught by the first CI run.
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Run eval suite
+        if: env.ANTHROPIC_API_KEY != ''
+        run: |
+          set +e
+          npm run eval
+          code=$?
+          set -e
+          echo "eval exit code: $code"
+          if [ "$code" = "1" ] || [ "$code" = "3" ]; then exit "$code"; fi
+
+      - name: Publish report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: evals/reports/latest.md
+          if-no-files-found: ignore
