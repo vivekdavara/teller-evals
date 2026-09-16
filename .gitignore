@@ -1,0 +1,9 @@
+node_modules/
+*.log
+.DS_Store
+
+# Timestamped run output is noise in a diff. The two committed demo reports
+# (evals/reports/demo-*.md) are deliberate exceptions -- they are the artifact
+# a reviewer reads without running anything.
+evals/reports/report-*.md
+evals/reports/latest.md

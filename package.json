@@ -1,0 +1,30 @@
+{
+  "name": "teller-evals",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "An agentic credit-union support assistant and the eval harness that keeps it honest.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "eval": "tsx src/cli.ts",
+    "eval:ci": "tsx src/cli.ts --ci",
+    "eval:list": "tsx src/cli.ts --list",
+    "selftest": "tsx src/cli.ts --selftest",
+    "demo:compliant": "tsx src/cli.ts --mock compliant",
+    "demo:negligent": "tsx src/cli.ts --mock negligent",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.273",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
+}
